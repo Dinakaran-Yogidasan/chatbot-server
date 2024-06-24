@@ -1,91 +1,97 @@
+// // // const express = require('express');
+// // // const bodyParser = require('body-parser');
+
+// // // const app = express();
+// // // const PORT = process.env.PORT || 5000;
+
+// // // app.use(bodyParser.json());
+
+// // // app.post('/webhook', (req, res) => {
+// // //     const intentName = req.body.queryResult.intent.displayName;
+
+// // //     let responseText = 'Sorry, I did not understand that.';
+
+// // //     if (intentName === 'Default Welcome Intent') {
+// // //         responseText = 'Hello! How can I help you today?';
+// // //     }
+
+// // //     res.json({
+// // //         fulfillmentText: responseText
+// // //     });
+// // // });
+
+// // // app.listen(PORT, () => {
+// // //     console.log(`Server is running on port ${PORT}`);
+// // // });
+
 // // const express = require('express');
-// // const bodyParser = require('body-parser');
-// // const { SessionsClient } = require('dialogflow');
+// // const cors = require('cors');
 
 // // const app = express();
-// // app.use(bodyParser.json());
+// // const port = 3001;
 
-// // const projectId = 'chatbot-qlpo';
-// // const sessionId = 'YOUR_SESSION_ID';
-// // const languageCode = 'en-US';
+// // app.use(cors());
+// // app.use(express.json());
 
-// // const sessionClient = new SessionsClient();
+// // const responses = [
+// //     "Hello! How can I help you today?",
+// //     "I'm not sure about that.",
+// //     "Can you please elaborate?",
+// //     "That's interesting!",
+// //     "Let's talk more about that."
+// // ];
 
-// // app.post('/webhook', async (req, res) => {
-// //     const query = req.body.query;
-// //     const sessionPath = sessionClient.projectAgentSessionPath(projectId, sessionId);
-
-// //     const request = {
-// //         session: sessionPath,
-// //         queryInput: {
-// //             text: {
-// //                 text: query,
-// //                 languageCode: languageCode,
-// //             },
-// //         },
-// //     };
-
-// //     const responses = await sessionClient.detectIntent(request);
-// //     const result = responses[0].queryResult;
-// //     res.json({ fulfillmentText: result.fulfillmentText });
+// // app.post('/chat', (req, res) => {
+// //     const userMessage = req.body.message;
+// //     const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+// //     res.json({ response: randomResponse });
+// //     console.log(userMessage)
 // // });
 
-// // const PORT = process.env.PORT || 5000;
-// // app.listen(PORT, () => console.log(`Server is running on port ${PORT}`));
+// // app.listen(port, () => {
+// //     console.log(`Chatbot server listening at http://localhost:${port}`);
+// // });
 
 
-// // index.js
 // const express = require('express');
 // const bodyParser = require('body-parser');
+// const { SessionsClient } = require('dialogflow');
 
 // const app = express();
+// const port = 3000;
+
+// // Middleware
 // app.use(bodyParser.json());
 
-// app.post('/webhook', (req, res) => {
-//     const intentName = req.body.queryResult.intent.displayName;
+// // DialogFlow Config
+// const projectId = 'applied-polymer-426905-u4';
+// const sessionClient = new SessionsClient({ keyFilename: '/Users/dyogidasan/chatbot-server/client_secret_1079728314020-7fgcksba2qa6gkcmlcm4mieao0khoj68.apps.googleusercontent.com.json' });
 
-//     if (intentName === 'yourIntentName') {
-//         // Handle the intent
-//         const response = {
-//             fulfillmentText: 'Your response text'
-//         };
-//         res.json(response);
-//     } else {
-//         res.json({
-//             fulfillmentText: `Unknown intent: ${intentName}`
-//         });
-//     }
+// app.post('/webhook', async (req, res) => {
+//   const sessionPath = sessionClient.projectAgentSessionPath(projectId, req.body.sessionId);
+//   const request = {
+//     session: sessionPath,
+//     queryInput: {
+//       text: {
+//         text: req.body.query,
+//         languageCode: 'en-US',
+//       },
+//     },
+//   };
+
+//   try {
+//     const responses = await sessionClient.detectIntent(request);
+//     const result = responses[0].queryResult;
+//     res.json({ fulfillmentText: result.fulfillmentText });
+//   } catch (error) {
+//     console.error('ERROR:', error);
+//     res.status(500).send('Something went wrong with DialogFlow');
+//   }
 // });
 
-// // Add this to your Node.js server code
-// app.post('/api/send-message', async (req, res) => {
-//     const { message } = req.body;
-
-//     const dialogflowRequest = {
-//         session: `projects/YOUR_PROJECT_ID/agent/sessions/unique_session_id`,
-//         queryInput: {
-//             text: {
-//                 text: message,
-//                 languageCode: 'en-US',
-//             },
-//         },
-//     };
-
-//     try {
-//         const responses = await dialogflowClient.detectIntent(dialogflowRequest);
-//         const result = responses[0].queryResult;
-//         res.json(result);
-//     } catch (error) {
-//         res.status(500).send('Error processing request');
-//     }
+// app.listen(port, () => {
+//   console.log(`Server running on port ${port}`);
 // });
-
-
-
-
-// const PORT = process.env.PORT || 5000;
-// app.listen(PORT, () => console.log(`Server is running on port ${PORT}`));
-
 
 
 const express = require('express');
@@ -99,22 +105,20 @@ app.post('/webhook', (req, res) => {
   const agent = new WebhookClient({ request: req, response: res });
 
   function welcome(agent) {
-    agent.add(`Welcome to my agent!`);
+    agent.add('Welcome to my DialogFlow agent!');
   }
 
   function fallback(agent) {
-    agent.add(`I didn't understand`);
-    agent.add(`I'm sorry, can you try again?`);
+    agent.add('I didn\'t understand that. Can you say it again?');
   }
 
   let intentMap = new Map();
   intentMap.set('Default Welcome Intent', welcome);
   intentMap.set('Default Fallback Intent', fallback);
-
   agent.handleRequest(intentMap);
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
